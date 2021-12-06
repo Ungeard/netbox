@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# Called from /etc/fstab to ensure we have something mounted at /mnt,
+# which is used by Netbox to store device modifications made to /root,
+# /var/lib and /etc.
+#
+# The source can be (1) an MTD partition named "Config", (2) a disk
+# partition labeled "Config". If none of those are available, (3) fall
+# back to a tmpfs based RAM disk. This effectively brings up the
+# system with the default configuration, but obviously any subsequent
+# configuration is ephemeral.
+#
+# This script also performs the actual factory reset.  Before mounting
+# the overlays the worker and upper dirs are cleaned.  This is the safe
+# way to do it.
+
+set -e
+
+opt="-c"
+ident=$(basename "$0")
+resetme=/mnt/factory-reset.now
+
+mnt()
+{
+    # If something is already setup, leave it be.
+    mountpoint -q /mnt && return 0
+
+    # Internal FLASH takes precedence over disks.
+    mount   mtd:Config && return 0
+    mount LABEL=Config && return 0
+
+    return 1
+}
+
+# fall back to console logging if sysklogd is too old
+if ! logger -? |grep -q "Log to kernel"; then
+    opt="-c"
+fi
+
+if ! mnt; then
+    logger $opt -p user.crit -t "$ident" \
+	   "/mnt was not properly mounted, falling back to tmpfs."
+
+    # Fall back to RAM disk.
+    mount tmpfs-Config
+    exit 1
+fi
+
+# Allow users in wheel group to write to /mnt
+chgrp wheel /mnt && chmod g+w   /mnt
+
+# Migrate from previous namespace for overlay
+if [ -d /mnt/netbox ]; then
+    mv /mnt/netbox /mnt/system
+fi
+
+# Perform factory reset before mounting overlay
+if [ -f "$resetme" ]; then
+   logger $opt -p user.crit -t "$ident" \
+	  "Resetting to factory default settings."
+   rm -rf /mnt/system/*.u /mnt/system/*.w
+   rm "$resetme"
+fi
+
+exit 0
