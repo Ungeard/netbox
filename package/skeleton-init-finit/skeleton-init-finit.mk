@@ -53,6 +53,14 @@ endef
 SKELETON_INIT_FINIT_TARGET_FINALIZE_HOOKS += SKELETON_INIT_FINIT_SET_MSTPD
 endif
 
+# FRR provides Routing protocol suite
+ifeq ($(BR2_PACKAGE_FRR),y)
+define SKELETON_INIT_FINIT_SET_FRR
+	ln -sf ../available/zebra.conf $(FINIT_D)/enabled/zebra.conf
+endef
+SKELETON_INIT_FINIT_TARGET_FINALIZE_HOOKS += SKELETON_INIT_FINIT_SET_FRR
+endif
+
 # Enable Busybox syslogd unless sysklogd is enabled
 ifeq ($(BR2_PACKAGE_SYSKLOGD),y)
 define SKELETON_INIT_FINIT_SET_SYSLOGD

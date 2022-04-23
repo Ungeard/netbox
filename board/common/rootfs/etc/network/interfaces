@@ -14,14 +14,14 @@ iface br0 inet manual
 	post-down ip link set dev br0 down
 
 # DHCP address, or comment out and enable static below
-auto vlan1
-iface vlan1 inet dhcp
-	pre-up    bridge vlan global set vid 1 dev br0 mcast_snooping 1 \
-			mcast_querier 1 mcast_igmp_version 3 mcast_mld_version 2
-	pre-up    bridge vlan add dev br0 vid 1 self
-	pre-up    ip link add link br0 dev vlan1 type vlan id 1
-	post-down ip link del vlan1
-	post-down bridge vlan del vid 1 dev br0 self
+#auto vlan1
+#iface vlan1 inet dhcp
+#	pre-up    bridge vlan global set vid 1 dev br0 mcast_snooping 1 \
+#			mcast_querier 1 mcast_igmp_version 3 mcast_mld_version 2
+#	pre-up    bridge vlan add dev br0 vid 1 self
+#	pre-up    ip link add link br0 dev vlan1 type vlan id 1
+#	post-down ip link del vlan1
+#	post-down bridge vlan del vid 1 dev br0 self
 
 # DHCP with one (or more) static IP addresses
 #auto vlan1
@@ -35,15 +35,17 @@ iface vlan1 inet dhcp
 #	post-down bridge vlan del vid 1 dev br0 self
 
 # Static IP, notice ifupdown in BusyBox doesn't support 192.168.2.200/24
-#auto vlan1
-#iface vlan1 inet static
-#	pre-up    bridge vlan add dev br0 vid 1 self
-#	pre-up    ip link add link br0 dev vlan1 type vlan id 1
-#	post-down ip link del vlan1
-#	post-down bridge vlan del vid 1 dev br0 self
-#	address 192.168.2.200
-#	netmask 255.255.255.0
-#	gateway 192.168.2.1
+auto vlan1
+iface vlan1 inet static
+	pre-up    bridge vlan global set vid 1 dev br0 mcast_snooping 1 \
+			mcast_querier 1 mcast_igmp_version 3 mcast_mld_version 2
+	pre-up    bridge vlan add dev br0 vid 1 self
+	pre-up    ip link add link br0 dev vlan1 type vlan id 1
+	post-down ip link del vlan1
+	post-down bridge vlan del vid 1 dev br0 self
+	address 192.168.2.200
+	netmask 255.255.255.0
+	gateway 192.168.2.1
 
 # Include files from /etc/network/interfaces.d:
 source-directory /etc/network/interfaces.d
